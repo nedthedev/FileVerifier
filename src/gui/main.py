@@ -5,12 +5,18 @@ from ..hash.main import HashGenerator
 
 class MainWindow:
     def __init__(self):
+        '''
+        MainWindow constructor. Configures the layout, menubar,
+        instance variables, etc.
+
+        :returns: an instance of PySimpleGUI
+        '''
         # variable declarations
         self.kill_code = "Quit"
         self.about_label = "About..."
         self.history_label = "History"
-        self.hash_generator = HashGenerator()
         self.hash_algos = ['MD5', 'SHA1', 'SHA256', 'SHA512']
+        self.hash_generator = HashGenerator()
         default_hash_algo = "SHA256"
 
         # window styling
@@ -36,7 +42,8 @@ class MainWindow:
             hash_radio_buttons.append(button)
 
         # Window layout
-        menubar = [['&File', ['&{}'.format(self.history_label), '---',
+        menubar = [['&File',
+                   ['&{}'.format(self.history_label), '---',
                     '&{}'.format(self.kill_code)]],
                    ['&Help', '&{}'.format(self.about_label)]]
         self.layout = [[sg.Menu(menubar)],
@@ -52,6 +59,11 @@ class MainWindow:
                        [sg.OK(key="-OK-", disabled=True)]]
 
     def get_hash_algo(self, values):
+        '''
+        Find out what the specified hash algorithm is
+
+        :returns: a string representing the desired hash algorithm
+        '''
         hash_algo = None
         for hash_algo in self.hash_algos:
             if values[hash_algo]:
@@ -59,6 +71,12 @@ class MainWindow:
         return hash_algo
 
     def do_analysis(self, values):
+        '''
+        Make call to get hash of the specified file
+
+        :param values: the values specified in the window
+        :returns: void
+        '''
         hash_algo = self.get_hash_algo(values)
 
         # compute the hash of the file
@@ -74,11 +92,17 @@ class MainWindow:
             if values['-HASH-INPUT-'] == result['value']:
                 valid = True
             sg.popup("Equal: {}".format(valid),
-                     "Original: {}\nComputed: {}\n\nTime taken: {}".format(
+                     "Original: {}\n"
+                     "Computed: {}\n\n"
+                     "Time taken: {}".format(
                      values['-HASH-INPUT-'], result['value'], finish-start),
                      font='Courier 10')
 
     def draw(self):
+        '''
+        Draw the window
+        :returns: void
+        '''
         window = sg.Window('File Verifier', self.layout, margins=(25, 25))
 
         # window lifespan block

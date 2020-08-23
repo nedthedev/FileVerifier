@@ -4,10 +4,23 @@ import os
 
 class HashGenerator:
     def __init__(self, buffer_size=2**10):  # , hash_algos):
+        '''
+        HashGenerator constructor
+
+        :returns: an instance of HashGenerator with a specified buffer size,
+        or a buffer size of 2^10 by default.
+        '''
         self.buffer_size = buffer_size
         # self.hash_algos = hash_algos
 
     def compute(self, algo, fpath):
+        '''
+        Function to compute the specified hash of the file.
+
+        :param algo: the hash algorithm to run on the file at fpath
+        :param fpath: the path to the file to run the hash algo on
+        :returns: a string reprsenting the hash value of the file
+        '''
         # verify that fpath is indeed a file, if so load it
         if not os.path.isfile(fpath):
             return {"success": False, "value": "Path given is not a file"}
