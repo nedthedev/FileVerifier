@@ -1,13 +1,17 @@
 import PySimpleGUI as sg
+import datetime
+from ..hash.main import HashGenerator
+
 
 class MainWindow:
-    def __init__(self, algorithms, default_algo, hash_generator):
+    def __init__(self):
         # variable declarations
         self.kill_code = "Quit"
         self.about_label = "About..."
-        self.hash_generator = hash_generator
-        self.hash_algos = algorithms
-        default_hash_algo = default_algo
+        self.history_label = "History"
+        self.hash_generator = HashGenerator()
+        self.hash_algos = ['MD5', 'SHA1', 'SHA256', 'SHA512']
+        default_hash_algo = "SHA256"
 
         # window styling
         sg.theme('Dark Blue 3')
@@ -17,9 +21,14 @@ class MainWindow:
         for hash_algo in self.hash_algos:
             if hash_algo == default_hash_algo:
                 # make this button the default one
-                button = sg.Radio(hash_algo, key='{}'.format(hash_algo), group_id="hash_algo", default=True)
+                button = sg.Radio(hash_algo,
+                                  key='{}'.format(hash_algo),
+                                  group_id="hash_algo",
+                                  default=True)
             else:
-                button = sg.Radio(hash_algo, key='{}'.format(hash_algo), group_id="hash_algo")
+                button = sg.Radio(hash_algo,
+                                  key='{}'.format(hash_algo),
+                                  group_id="hash_algo")
 
             # don't know how to get this working :(
             '''if hash_algo == default_hash_algo:
@@ -27,19 +36,47 @@ class MainWindow:
             hash_radio_buttons.append(button)
 
         # Window layout
-        menubar =  [['&File', ['&Check new file', '&History', '---', '&{}'.format(self.kill_code),]],
-                    ['&Help', '&{}'.format(self.about_label)],]
-        self.layout = [ [sg.Menu(menubar)],
-                    [sg.T("Choose file to verify")],
-                    [sg.In(key="-FILE-INPUT-", enable_events=True)],
-                    [sg.FileBrowse(target="-FILE-INPUT-")],
-                    [sg.Text('_'*45)],
-                    [sg.T("Choose your hash algorithm")],
-                    hash_radio_buttons,
-                    [sg.Text('_'*45)],
-                    [sg.T("Enter the hash value to check against")],
-                    [sg.In(key="-HASH-INPUT-", enable_events=True)],
-                    [sg.OK(key="-OK-", disabled=True)] ]
+        menubar = [['&File', ['&{}'.format(self.history_label), '---',
+                    '&{}'.format(self.kill_code)]],
+                   ['&Help', '&{}'.format(self.about_label)]]
+        self.layout = [[sg.Menu(menubar)],
+                       [sg.T("Choose file to verify")],
+                       [sg.In(key="-FILE-INPUT-", enable_events=True)],
+                       [sg.FileBrowse(target="-FILE-INPUT-")],
+                       [sg.Text('_'*45)],
+                       [sg.T("Choose your hash algorithm")],
+                       hash_radio_buttons,
+                       [sg.Text('_'*45)],
+                       [sg.T("Enter the hash value to check against")],
+                       [sg.In(key="-HASH-INPUT-", enable_events=True)],
+                       [sg.OK(key="-OK-", disabled=True)]]
+
+    def get_hash_algo(self, values):
+        hash_algo = None
+        for hash_algo in self.hash_algos:
+            if values[hash_algo]:
+                break
+        return hash_algo
+
+    def do_analysis(self, values):
+        hash_algo = self.get_hash_algo(values)
+
+        # compute the hash of the file
+        start = datetime.datetime.now()
+        result = self.hash_generator.compute(hash_algo, values['-FILE-INPUT-'])
+        finish = datetime.datetime.now()
+
+        # display the result, be it an error or success
+        if not result['success']:
+            sg.popup("Error: {}".format(result['value']))
+        else:
+            valid = False
+            if values['-HASH-INPUT-'] == result['value']:
+                valid = True
+            sg.popup("Equal: {}".format(valid),
+                     "Original: {}\nComputed: {}\n\nTime taken: {}".format(
+                     values['-HASH-INPUT-'], result['value'], finish-start),
+                     font='Courier 10')
 
     def draw(self):
         window = sg.Window('File Verifier', self.layout, margins=(25, 25))
@@ -48,35 +85,26 @@ class MainWindow:
         while True:
             event, values = window.read()
 
-            # if file and hash value provided then can continue
+            # if file and hash value provided then enable OK button
             if values['-FILE-INPUT-'] and values['-HASH-INPUT-']:
                 window['-OK-'].update(disabled=False)
             else:
                 window['-OK-'].update(disabled=True)
 
+            ######################################
+
             # handling the different event signals
-            # if you exited, via wm or menubar
             if event in (sg.WIN_CLOSED, self.kill_code):
+                # closed out or pressed the quit button
                 break
-            # if you pressed the ok button...
             elif event == "-OK-":
-                hash_algo = None
-                for hash_algo in self.hash_algos:
-                    if values[hash_algo]:
-                        break
-                
-                #
-                result = self.hash_generator.compute(hash_algo, values['-FILE-INPUT-'])
-                if not result['success']:
-                    sg.popup("Error: {}".format(result['value']))
-                else:
-                    valid = False
-                    if values['-HASH-INPUT-'] == result['value']:
-                        valid = True
-                    sg.popup("Equal: {}".format(valid), "Original: {}\nComputed: {}".format(values['-HASH-INPUT-'], result['value']), font='Courier 12')
-            # this is a collection of menubar options
-            # if you clicked the about option...
+                # pressed the ok button to do the hashing
+                self.do_analysis(values)
             elif event == self.about_label:
+                # pressed the about button
                 sg.popup("About...", "File Verifier\nV1.0.0")
+            elif event == self.history_label:
+                # pressed the history button
+                sg.popup("History", "None")
 
         window.close()

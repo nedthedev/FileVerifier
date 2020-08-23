@@ -1,32 +1,50 @@
 import hashlib
 import os
 
-class HashGenerator:
-    def __init__(self, hash_algos):
-        self.hash_algos = hash_algos
 
-    def compute(self, type, fpath):
+class HashGenerator:
+    def __init__(self, buffer_size=2**10):  # , hash_algos):
+        self.buffer_size = buffer_size
+        # self.hash_algos = hash_algos
+
+    def compute(self, algo, fpath):
+        # verify that fpath is indeed a file, if so load it
         if not os.path.isfile(fpath):
             return {"success": False, "value": "Path given is not a file"}
-        if type == "MD5":
-            return {"success": True, "value": self.md5(fpath)}
-        elif type == "SHA1":
-            return {"success": True, "value": self.sha1(fpath)}
-        elif type == "SHA256":
-            return {"success": True, "value": self.sha256(fpath)}
-        elif type == "SHA512":
-            return {"success": True, "value": self.sha512(fpath)}
         else:
-            return {"success": False, "value": "Algorithm not integrated yet."}
+            hash_algo = None
+            # open the file and determine the hash algorithm
+            with open(fpath, 'rb') as f:
+                if algo == "MD5":
+                    hash_algo = hashlib.md5()
+                elif algo == "SHA1":
+                    hash_algo = hashlib.sha1()
+                elif algo == "SHA256":
+                    hash_algo = hashlib.sha256()
+                elif algo == "SHA512":
+                    hash_algo = hashlib.sha512()
+                else:
+                    # unknown hash algorithm has been specified
+                    return {
+                        "success": False,
+                        "value": "Algorithm not integrated yet."
+                        }
+                return {
+                    "success": True,
+                    "value": self.get_hash(f, hash_algo)
+                    }
 
-    def md5(self, fpath):
-            return hashlib.md5(open(fpath,'rb').read()).hexdigest()
+    def get_hash(self, f, file_hash):
+        '''
+        Evaluate the hash of the given file
 
-    def sha1(self, fpath):
-        return hashlib.sha1(open(fpath,'rb').read()).hexdigest()
-
-    def sha256(self, fpath):
-        return hashlib.sha256(open(fpath,'rb').read()).hexdigest()
-
-    def sha512(self, fpath):
-        return hashlib.sha512(open(fpath,'rb').read()).hexdigest()
+        :param f: the file to compute the hash of
+        :param file_hash: the hash algorithm to be used
+        :returns: a string representing the hash or an exception
+        '''
+        try:
+            while chunk := f.read(self.buffer_size):
+                file_hash.update(chunk)
+            return file_hash.hexdigest()
+        except Exception as e:
+            return e
