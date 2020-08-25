@@ -43,7 +43,7 @@ class MainWindow:
 
         # Window layout
         menubar = [['&File',
-                   ['&{}'.format(self.history_label), '---',
+                   [  # '&{}'.format(self.history_label), '---',
                     '&{}'.format(self.kill_code)]],
                    ['&Help', '&{}'.format(self.about_label)]]
         self.layout = [[sg.Menu(menubar)],
