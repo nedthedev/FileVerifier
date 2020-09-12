@@ -11,7 +11,10 @@ class HashGenerator:
         or a buffer size of 2^10 by default.
         '''
         self.buffer_size = buffer_size
-        # self.hash_algos = hash_algos
+        # If changing the algorithms here, be sure to change the algorithm
+        # checking in compute()
+        self.hash_algos = ['MD5', 'SHA1', 'SHA256', 'SHA512']
+        self.default_algo = self.hash_algos[2]
 
     def compute(self, algo, fpath):
         '''
@@ -28,13 +31,13 @@ class HashGenerator:
             hash_algo = None
             # open the file and determine the hash algorithm
             with open(fpath, 'rb') as f:
-                if algo == "MD5":
+                if algo == self.hash_algos[0]:
                     hash_algo = hashlib.md5()
-                elif algo == "SHA1":
+                elif algo == self.hash_algos[1]:
                     hash_algo = hashlib.sha1()
-                elif algo == "SHA256":
+                elif algo == self.hash_algos[2]:
                     hash_algo = hashlib.sha256()
-                elif algo == "SHA512":
+                elif algo == self.hash_algos[3]:
                     hash_algo = hashlib.sha512()
                 else:
                     # unknown hash algorithm has been specified
@@ -42,10 +45,7 @@ class HashGenerator:
                         "success": False,
                         "value": "Algorithm not integrated yet."
                         }
-                return {
-                    "success": True,
-                    "value": self.get_hash(f, hash_algo)
-                    }
+                return self.get_hash(f, hash_algo)
 
     def get_hash(self, f, file_hash):
         '''
@@ -58,6 +58,12 @@ class HashGenerator:
         try:
             while chunk := f.read(self.buffer_size):
                 file_hash.update(chunk)
-            return file_hash.hexdigest()
+            return {
+                'success': True,
+                'value': file_hash.hexdigest()
+            }
         except Exception as e:
-            return e
+            return {
+                'success': False,
+                'value': "{}".format(e)
+            }

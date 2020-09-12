@@ -15,9 +15,10 @@ class MainWindow:
         self.kill_code = "Quit"
         self.about_label = "About..."
         self.history_label = "History"
-        self.hash_algos = ['MD5', 'SHA1', 'SHA256', 'SHA512']
         self.hash_generator = HashGenerator()
-        default_hash_algo = "SHA256"
+        self.hash_algos = self.hash_generator.hash_algos
+        
+        default_hash_algo = self.hash_generator.default_algo
 
         # window styling
         sg.theme('Dark Blue 3')
