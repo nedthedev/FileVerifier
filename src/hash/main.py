@@ -22,11 +22,15 @@ class HashGenerator:
 
         :param algo: the hash algorithm to run on the file at fpath
         :param fpath: the path to the file to run the hash algo on
-        :returns: a string reprsenting the hash value of the file
+        :returns: a dictionary object in the format { success: bool, 
+        val: str }
         '''
         # verify that fpath is indeed a file, if so load it
         if not os.path.isfile(fpath):
-            return {"success": False, "value": "Path given is not a file"}
+            return {
+                "success": False, 
+                "value": "Path given is not a file"
+                }
         else:
             hash_algo = None
             # open the file and determine the hash algorithm
