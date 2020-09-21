@@ -17,7 +17,7 @@ class MainWindow:
         self.history_label = "History"
         self.hash_generator = HashGenerator()
         self.hash_algos = self.hash_generator.hash_algos
-        
+
         default_hash_algo = self.hash_generator.default_algo
 
         # window styling
@@ -110,10 +110,13 @@ class MainWindow:
         while True:
             event, values = window.read()
 
-            # if file and hash value provided then enable OK button
-            if values['-FILE-INPUT-'] and values['-HASH-INPUT-']:
-                window['-OK-'].update(disabled=False)
-            else:
+            try:
+                # if file and hash value provided then enable OK button
+                if values['-FILE-INPUT-'] and values['-HASH-INPUT-']:
+                    window['-OK-'].update(disabled=False)
+                else:
+                    window['-OK-'].update(disabled=True)
+            except Exception:
                 window['-OK-'].update(disabled=True)
 
             ######################################
